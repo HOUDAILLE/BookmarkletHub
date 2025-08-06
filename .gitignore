@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Archive directory
 archive/
+
+# Journal file
+journal.log
