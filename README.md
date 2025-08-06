@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BookmarkletHub
 
-## Getting Started
+BookmarkletHub est une application Next.js conçue pour gérer et partager des bookmarklets. Elle intègre des fonctionnalités d'interaction avec GitHub pour faciliter la contribution et la gestion des bookmarklets.
 
-First, run the development server:
+## Fonctionnalités Clés
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+*   **Gestion des Bookmarklets :** Permet de stocker, organiser et accéder facilement à une collection de bookmarklets.
+*   **Intégration GitHub :** Facilite la création de forks, de branches, la soumission de commits et l'ouverture de Pull Requests directement depuis l'application pour contribuer à des dépôts de bookmarklets.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Changements Récents
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Les interactions avec l'API GitHub ont été refactorisées pour utiliser directement les API REST et GraphQL de GitHub via `fetch`, remplaçant ainsi l'utilisation de commandes shell (`gh cli`). Cela améliore la sécurité, la portabilité et la robustesse de l'application.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Démarrage Rapide
 
-## Learn More
+Pour lancer l'application en mode développement :
 
-To learn more about Next.js, take a look at the following resources:
+1.  **Cloner le dépôt :**
+    ```bash
+    git clone [URL_DU_DEPOT]
+    cd BookmarkletHub/app
+    ```
+2.  **Installer les dépendances :**
+    ```bash
+    npm install
+    # ou yarn install
+    # ou pnpm install
+    # ou bun install
+    ```
+3.  **Configuration des variables d'environnement :**
+    Créez un fichier `.env.local` à la racine du dossier `app` et ajoutez votre token GitHub :
+    ```
+    GITHUB_TOKEN=votre_token_github
+    ```
+    Assurez-vous que ce token a les permissions nécessaires (repo, user).
+4.  **Lancer le serveur de développement :**
+    ```bash
+    npm run dev
+    # ou yarn dev
+    # ou pnpm dev
+    # ou bun dev
+    ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Ouvrez [http://localhost:3000](http://localhost:3000) dans votre navigateur pour voir le résultat.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## En savoir plus
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Pour plus d'informations sur Next.js, consultez la [documentation Next.js](https://nextjs.org/docs).
