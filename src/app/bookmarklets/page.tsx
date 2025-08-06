@@ -14,24 +14,54 @@ export default function BookmarkletsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const MAIN_REPO_OWNER = 'HOUDAILLE'; // Your GitHub username
+  const MAIN_REPO_NAME = 'BookmarkletHub';
+  const BOOKMARKLETS_PATH = 'bookmarklets'; // Directory where bookmarklets are stored
+
   useEffect(() => {
     async function fetchBookmarklets() {
       try {
-        // In a real application, you would fetch from your own API route
-        // that then calls the GitHub API to list/read files.
-        // For now, we'll simulate or directly call a simplified API if available.
-        // This part needs to be implemented in /api/github to list files.
+        // 1. Get list of files in the bookmarklets directory
+        const dirContentsResponse = await fetch('/api/github', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'getDirectoryContents',
+            owner: MAIN_REPO_OWNER,
+            repo: MAIN_REPO_NAME,
+            path: BOOKMARKLETS_PATH,
+            ref: 'master', // Assuming 'master' as the main branch
+          }),
+        });
+        const dirContentsData = await dirContentsResponse.json();
+        if (!dirContentsResponse.ok) throw new Error(dirContentsData.error || 'Failed to get directory contents');
 
-        // Placeholder for fetching bookmarklets from GitHub
-        // This will involve calling a new action in /api/github to list files in a directory
-        // and then another action to read the content of each file.
+        const files = dirContentsData.contents.filter((item: any) => item.type === 'file');
 
-        // Simulate fetching data
-        const simulatedData: Bookmarklet[] = [
-          { name: "Example Bookmarklet 1", code: "javascript:alert('Hello from Bookmarklet 1!');" },
-          { name: "Example Bookmarklet 2", code: "javascript:console.log('Hello from Bookmarklet 2!');" },
-        ];
-        setBookmarklets(simulatedData);
+        // 2. Fetch content for each bookmarklet file
+        const fetchedBookmarklets: Bookmarklet[] = [];
+        for (const file of files) {
+          const fileContentResponse = await fetch('/api/github', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'getFileContent',
+              owner: MAIN_REPO_OWNER,
+              repo: MAIN_REPO_NAME,
+              path: file.path,
+              ref: 'master',
+            }),
+          });
+          const fileContentData = await fileContentResponse.json();
+          if (!fileContentResponse.ok) throw new Error(fileContentData.error || `Failed to get content for ${file.name}`);
+
+          fetchedBookmarklets.push({
+            name: file.name.replace(/\.js$/, ''), // Remove .js extension for display
+            code: fileContentData.content,
+          });
+        }
+
+        setBookmarklets(fetchedBookmarklets);
       } catch (err: any) {
         setError(err.message);
       } finally {
