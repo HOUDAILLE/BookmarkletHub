@@ -1,14 +1,21 @@
 // src/app/api/github/route.ts
 
 import { NextResponse } from 'next/server';
-import { run_shell_command } from '../../../../utils/run_shell_command';
-
 async function createFork(owner: string, repo: string) {
   try {
-    const command = `gh api repos/${owner}/${repo}/forks --method POST`;
-    const result = await run_shell_command(command, `Creating fork for ${owner}/${repo}`);
-    // gh api returns JSON, so we parse stdout
-    return JSON.parse(result.stdout);
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/forks`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Length': '0', // Required for POST with no body
+      },
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    return await response.json();
   } catch (error) {
     console.error('Error creating fork:', error);
     throw error;
@@ -17,9 +24,23 @@ async function createFork(owner: string, repo: string) {
 
 async function createBranch(forkOwner: string, forkRepo: string, newBranchName: string, baseCommitSha: string) {
   try {
-    const command = `gh api repos/${forkOwner}/${forkRepo}/git/refs --method POST -f ref=refs/heads/${newBranchName} -f sha=${baseCommitSha}`; 
-    const result = await run_shell_command(command, `Creating branch ${newBranchName} in ${forkOwner}/${forkRepo}`);
-    return JSON.parse(result.stdout);
+    const response = await fetch(`https://api.github.com/repos/${forkOwner}/${forkRepo}/git/refs`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ref: `refs/heads/${newBranchName}`,
+        sha: baseCommitSha,
+      }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    return await response.json();
   } catch (error) {
     console.error('Error creating branch:', error);
     throw error;
@@ -35,10 +56,32 @@ async function commitChanges(
   fileDeletions: Array<{ path: string }>
 ) {
   try {
-    // First, get the branch ID
-    const getBranchIdCommand = `gh api graphql -f query='query { repository(owner: "${forkOwner}", name: "${forkRepo}") { ref(qualifiedName: "refs/heads/${branchName}") { id } } }'`;
-    const branchIdResult = await run_shell_command(getBranchIdCommand, `Getting branch ID for ${branchName}`);
-    const branchIdData = JSON.parse(branchIdResult.stdout);
+    // First, get the branch ID using GraphQL API
+    const getBranchIdQuery = `
+      query {
+        repository(owner: "${forkOwner}", name: "${forkRepo}") {
+          ref(qualifiedName: "refs/heads/${branchName}") {
+            id
+          }
+        }
+      }
+    `;
+
+    const branchIdResponse = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: {
+        'Authorization': `bearer ${process.env.GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: getBranchIdQuery }),
+    });
+
+    if (!branchIdResponse.ok) {
+      const errorText = await branchIdResponse.text();
+      throw new Error(`GitHub GraphQL API error (getBranchId): ${branchIdResponse.status} ${branchIdResponse.statusText} - ${errorText}`);
+    }
+
+    const branchIdData = await branchIdResponse.json();
     const branchId = branchIdData.data.repository.ref.id;
 
     if (!branchId) {
@@ -81,15 +124,21 @@ async function commitChanges(
       }
     };
 
-    // gh api graphql expects the query and variables as separate arguments
-    // Need to carefully escape the JSON strings for the shell command
-    const escapedMutation = mutation.replace(/\n/g, ' ').replace(/'/g, "'\'");
-    const escapedVariables = JSON.stringify(variables).replace(/'/g, "'\'");
+    const commitResponse = await fetch('https://api.github.com/graphql', {
+      method: 'POST',
+      headers: {
+        'Authorization': `bearer ${process.env.GITHUB_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: mutation, variables }),
+    });
 
-    const commitCommand = `gh api graphql -f query='${escapedMutation}' -f variables='${escapedVariables}'`;
+    if (!commitResponse.ok) {
+      const errorText = await commitResponse.text();
+      throw new Error(`GitHub GraphQL API error (commitChanges): ${commitResponse.status} ${commitResponse.statusText} - ${errorText}`);
+    }
 
-    const commitResult = await run_shell_command(commitCommand, `Committing changes to ${branchName}`);
-    return JSON.parse(commitResult.stdout);
+    return await commitResponse.json();
 
   } catch (error) {
     console.error('Error committing changes:', error);
@@ -106,9 +155,25 @@ async function createPullRequest(
   body: string = ""
 ) {
   try {
-    const command = `gh api repos/${baseOwner}/${baseRepo}/pulls --method POST -f title='${title}' -f head='${head}' -f base='${base}' -f body='${body}'`;
-    const result = await run_shell_command(command, `Creating pull request from ${head} to ${baseOwner}/${baseRepo}:${base}`);
-    return JSON.parse(result.stdout);
+    const response = await fetch(`https://api.github.com/repos/${baseOwner}/${baseRepo}/pulls`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title,
+        head,
+        base,
+        body,
+      }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    return await response.json();
   } catch (error) {
     console.error('Error creating pull request:', error);
     throw error;
