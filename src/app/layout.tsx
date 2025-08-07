@@ -1,20 +1,18 @@
-import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 
-export const metadata: Metadata = {
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
   title: "BookmarkletHub",
-  description: "Hébergez, partagez et découvrez des bookmarklets utiles.",
+  description: "Manage and share your bookmarklets.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body>
+    <html lang="en">
+      <body className={inter.className}>
         <SessionProvider>
           {children}
         </SessionProvider>

@@ -180,6 +180,26 @@ async function createPullRequest(
   }
 }
 
+async function getLatestCommitSha(owner: string, repo: string, branch: string) {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${branch}`, {
+      headers: {
+        'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GitHub API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+    const data = await response.json();
+    return data.object.sha;
+  } catch (error) {
+    console.error('Error getting latest commit SHA:', error);
+    throw error;
+  }
+}
+
 export async function GET(request: Request) {
   return NextResponse.json({ message: 'GitHub API route is working!' });
 }
@@ -193,6 +213,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Fork created successfully', data: forkData });
     } catch (error: any) {
       return NextResponse.json({ message: 'Failed to create fork', error: error.message }, { status: 500 });
+    }
+  } else if (body.action === 'getLatestCommitSha' && body.owner && body.repo && body.branch) {
+    try {
+      const sha = await getLatestCommitSha(body.owner, body.repo, body.branch);
+      return NextResponse.json({ message: 'Latest commit SHA retrieved successfully', sha });
+    } catch (error: any) {
+      return NextResponse.json({ message: 'Failed to get latest commit SHA', error: error.message }, { status: 500 });
     }
   } else if (body.action === 'createBranch' && body.forkOwner && body.forkRepo && body.newBranchName && body.baseCommitSha) {
     try {

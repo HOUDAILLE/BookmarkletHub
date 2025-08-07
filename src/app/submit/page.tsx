@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react'; // Import useSession
+import CodeEditor from '../components/CodeEditor';
 
 export default function SubmitBookmarkletPage() {
   const { data: session } = useSession(); // Get session data
@@ -27,14 +28,14 @@ export default function SubmitBookmarkletPage() {
 
     try {
       // 1. Get latest commit SHA from main repository
-      const getShaResponse = await fetch('/api/github', {
+      const getShaResponse = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'getLatestCommitSha',
           owner: MAIN_REPO_OWNER,
           repo: MAIN_REPO_NAME,
-          branch: 'master', // Assuming 'master' as the main branch
+          branch: 'main', // Assuming 'main' as the main branch
         }),
       });
       const getShaData = await getShaResponse.json();
@@ -44,7 +45,7 @@ export default function SubmitBookmarkletPage() {
 
       // 2. Create a new branch in the user's fork
       const newBranchName = `bookmarklet-${Date.now()}`;
-      const createBranchResponse = await fetch('/api/github', {
+      const createBranchResponse = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -61,7 +62,7 @@ export default function SubmitBookmarkletPage() {
 
       // 3. Commit the new bookmarklet file to that branch
       const bookmarkletFileName = `${title.toLowerCase().replace(/\s/g, '-')}.js`;
-      const commitResponse = await fetch('/api/github', {
+      const commitResponse = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -81,7 +82,7 @@ export default function SubmitBookmarkletPage() {
       console.log('Changes committed:', commitData);
 
       // 4. Create a pull request from the user's fork to the main repository
-      const createPrResponse = await fetch('/api/github', {
+      const createPrResponse = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,7 +91,7 @@ export default function SubmitBookmarkletPage() {
           baseRepo: MAIN_REPO_NAME,
           title: `Add new bookmarklet: ${title}`,
           head: `${userGithubUsername}:${newBranchName}`,
-          base: 'master', // Target the 'master' branch of the main repo
+          base: 'main', // Target the 'main' branch of the main repo
           body: `This PR adds a new bookmarklet titled "${title}".\n\n${bookmarkletCode}`,
         }),
       });
@@ -125,12 +126,10 @@ export default function SubmitBookmarkletPage() {
         </div>
         <div className="mb-6">
           <label htmlFor="code" className="block text-gray-700 text-sm font-bold mb-2">Code JavaScript:</label>
-          <textarea
-            id="code"
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-64 font-mono"
+          <CodeEditor
             value={bookmarkletCode}
-            onChange={(e) => setBookmarkletCode(e.target.value)}
-            required
+            onChange={setBookmarkletCode}
+            placeholder="// Votre code JavaScript ici"
           />
         </div>
         <div className="flex items-center justify-between">

@@ -1,49 +1,30 @@
-// src/app/donate/page.tsx
-
-"use client";
+import React from 'react';
 
 export default function DonatePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start p-24">
+    <main className="flex min-h-screen flex-col items-center p-24">
       <h1 className="text-4xl font-bold mb-8">Soutenir BookmarkletHub</h1>
-
-      <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-md mb-8 text-center">
-        <h2 className="text-2xl font-semibold mb-4">Faites un Don</h2>
-        <p className="mb-4">
-          BookmarkletHub est un projet open-source et gratuit. Votre soutien nous aide à maintenir et à améliorer la plateforme.
-          Chaque contribution, petite ou grande, est grandement appréciée !
+      <div className="w-full max-w-2xl bg-white p-8 rounded-lg shadow-md text-center">
+        <p className="text-lg mb-4">
+          Si vous appréciez BookmarkletHub et souhaitez soutenir son développement, vous pouvez faire un don.
         </p>
-        
-        <div className="mt-8">
-          <p className="text-lg font-medium mb-4">Options de Donation (Exemples d'intégration):</p>
-          <div className="flex flex-col items-center space-y-4">
-            <a 
-              href="#"
-              onClick={(e) => { e.preventDefault(); alert('Intégration PayPal à venir'); }}
-              className="w-full md:w-1/2 lg:w-1/3 px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
-            >
-              Faire un don via PayPal
-            </a>
-            <a 
-              href="#"
-              onClick={(e) => { e.preventDefault(); alert('Intégration Stripe à venir'); }}
-              className="w-full md:w-1/2 lg:w-1/3 px-6 py-3 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300"
-            >
-              Faire un don via Stripe
-            </a>
-            <a 
-              href="#"
-              onClick={(e) => { e.preventDefault(); alert('Intégration Patreon à venir'); }}
-              className="w-full md:w-1/2 lg:w-1/3 px-6 py-3 bg-red-600 text-white rounded-lg shadow-md hover:bg-red-700 transition duration-300"
-            >
-              Soutenir sur Patreon
-            </a>
-          </div>
+        <p className="text-md mb-6">
+          Votre contribution nous aidera à maintenir le service et à ajouter de nouvelles fonctionnalités.
+        </p>
+        <div className="flex flex-col items-center space-y-4">
+          <a
+            href="https://www.paypal.com/donate/?hosted_button_id=YOUR_PAYPAL_BUTTON_ID"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-xl shadow-lg transition duration-300 ease-in-out"
+          >
+            Faire un don via PayPal
+          </a>
+          {/* Add other donation options here */}
+          <p className="text-sm text-gray-500 mt-4">
+            (Remplacez YOUR_PAYPAL_BUTTON_ID par votre véritable ID de bouton PayPal)
+          </p>
         </div>
-
-        <p className="mt-8 text-sm text-gray-500">
-          Note: Les liens ci-dessus sont des exemples. Dans une version finale, ils seraient intégrés avec les services de paiement réels.
-        </p>
       </div>
     </main>
   );
